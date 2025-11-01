@@ -1,0 +1,21 @@
+services:
+  postgres:
+    container_name: users-db
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: users-db
+      POSTGRES_USER: p-user
+      POSTGRES_PASSWORD: my-password
+    volumes:
+      - "pg_data:/var/lib/postgresql/data"
+    networks:
+      - "auth"
+
+volumes:
+  pg_data:
+
+networks:
+  auth:
+    driver: bridge
