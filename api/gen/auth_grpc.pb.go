@@ -4,7 +4,7 @@
 // - protoc             v6.32.1
 // source: auth.proto
 
-package dark0_auth
+package authv1
 
 import (
 	context "context"

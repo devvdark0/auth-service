@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/ilyakaznacheev/cleanenv"
+	"os"
 	"time"
 )
 
@@ -17,11 +18,14 @@ type GRPCConfig struct {
 }
 
 func MustLoad() *Config {
-	var cfg *Config
-	err := cleanenv.ReadConfig("config/config.yaml", cfg)
+	var cfg Config
+
+	configPath := os.Getenv("CONFIG_PATH")
+
+	err := cleanenv.ReadConfig(configPath, &cfg)
 	if err != nil {
 		panic("failed to read config: " + err.Error())
 	}
 
-	return cfg
+	return &cfg
 }
