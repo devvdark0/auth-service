@@ -34,7 +34,7 @@ func (a *App) MustRun() {
 
 func (a *App) Run() error {
 	const op = "grpcapp.Run"
-	log := a.log.With(zap.Field{Key: "op", String: op})
+	log := a.log.Named(op)
 
 	l, err := net.Listen("tcp", fmt.Sprintf(":%d", a.gRPCPort))
 	if err != nil {
@@ -51,7 +51,7 @@ func (a *App) Run() error {
 
 func (a *App) Stop() {
 	const op = "grpcapp.Stop"
-	a.log.With(zap.Field{Key: "op", String: op}).Info("stopping grpc server: ", zap.Int("port", a.gRPCPort))
+	a.log.Named(op).Info("stopping grpc server: ", zap.Int("port", a.gRPCPort))
 
 	a.gRPCServer.GracefulStop()
 }
