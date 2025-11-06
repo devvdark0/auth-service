@@ -4,6 +4,9 @@ import (
 	"github.com/devvdark0/auth-service/internal/app"
 	"github.com/devvdark0/auth-service/internal/config"
 	"go.uber.org/zap"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 const (
@@ -20,10 +23,19 @@ func main() {
 	log.Info("starting application...")
 
 	application := app.New(log, cfg.StoragePath, cfg.GRPC.Port)
-	application.GRPCServer.MustRun()
+	go application.GRPCServer.MustRun()
 
 	//TODO: start grpc-server
 
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
+
+	sign := <-stop
+	log.Info("stopping application", zap.String("signal", sign.String()))
+
+	application.GRPCServer.Stop()
+
+	log.Info("application stopped")
 }
 
 func configureLogger(env string) *zap.Logger {
