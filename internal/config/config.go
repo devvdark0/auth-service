@@ -11,11 +11,12 @@ type Config struct {
 }
 
 type AppConfig struct {
-	Env         string        `yaml:"env"`
-	Host        string        `yaml:"host"`
-	Port        string        `yaml:"port"`
-	Timeout     time.Duration `yaml:"timeout"`
-	IdleTimeout time.Duration `yaml:"idle_timeout"`
+	Env             string        `yaml:"env"`
+	Host            string        `yaml:"host"`
+	Port            string        `yaml:"port"`
+	Timeout         time.Duration `yaml:"timeout"`
+	IdleTimeout     time.Duration `yaml:"idle_timeout"`
+	ShutdownTimeout time.Duration `yaml:"shutdown_timeout"`
 }
 
 func MustLoad(path string) (*Config, error) {
