@@ -1,0 +1,29 @@
+package config
+
+import (
+	"time"
+
+	"github.com/ilyakaznacheev/cleanenv"
+)
+
+type Config struct {
+	App AppConfig `yaml:"app"`
+}
+
+type AppConfig struct {
+	Env         string        `yaml:"env"`
+	Host        string        `yaml:"host"`
+	Port        string        `yaml:"port"`
+	Timeout     time.Duration `yaml:"timeout"`
+	IdleTimeout time.Duration `yaml:"idle_timeout"`
+}
+
+func MustLoad(path string) (*Config, error) {
+	var cfg Config
+
+	if err := cleanenv.ReadConfig(path, &cfg); err != nil {
+		return nil, err
+	}
+
+	return &cfg, nil
+}

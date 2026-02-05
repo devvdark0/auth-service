@@ -1,0 +1,6 @@
+app:
+  env: dev
+  host: localhost
+  port: 8000
+  timeout: 5s
+  idle_timeout: 60s
