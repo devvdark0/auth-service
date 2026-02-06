@@ -28,6 +28,7 @@ func main() {
 
 	log := configureLogger(cfg.App.Env)
 
+	log.Info("initializing database...")
 	db, err := db.InitDB(cfg.DB)
 	if err != nil {
 		log.Error("failed to initialize database", "err", err)
