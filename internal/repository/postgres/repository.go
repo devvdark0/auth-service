@@ -28,9 +28,11 @@ func (ur *userRepository) CreateUser(ctx context.Context, email, password string
 
 	err := ur.db.QueryRow(ctx, sql, email, password).Scan(&userId)
 	if err != nil {
+		ur.log.Error("failed insert", "err", err)
 		return 0, err
 	}
 
+	ur.log.Debug("user was created", "user_id", userId)
 	return userId, nil
 }
 
@@ -41,8 +43,10 @@ func (ur *userRepository) GetUserByEmail(ctx context.Context, email string) (*mo
 
 	err := ur.db.QueryRow(ctx, sql, email).Scan(&user.ID, &user.Email, &user.Password)
 	if err != nil {
+		ur.log.Error("failed select user", "err", err)
 		return nil, err
 	}
 
+	ur.log.Debug("successfuly get user", "email", user.Email)
 	return &user, nil
 }
