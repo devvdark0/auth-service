@@ -12,6 +12,7 @@ import (
 
 	"github.com/devvdark0/auth-service/internal/config"
 	"github.com/devvdark0/auth-service/internal/db"
+	"github.com/devvdark0/auth-service/internal/migrations"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -33,6 +34,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	if err := migrations.RunMigrations(cfg.DB.URL, "./migrations"); err != nil {
+		log.Error("migrations are failed", "err", err)
+	}
+	log.Info("migrations are succesfully applied")
 	_ = db
 
 	srv := http.Server{
