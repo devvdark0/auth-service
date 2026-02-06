@@ -11,6 +11,7 @@ import (
 	"syscall"
 
 	"github.com/devvdark0/auth-service/internal/config"
+	"github.com/devvdark0/auth-service/internal/db"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -24,9 +25,15 @@ func main() {
 		panic(err)
 	}
 
-	//TODO: init logger
 	log := configureLogger(cfg.App.Env)
-	//TODO: init storage
+
+	db, err := db.InitDB(cfg.DB)
+	if err != nil {
+		log.Error("failed to initialize database", "err", err)
+		os.Exit(1)
+	}
+
+	_ = db
 
 	srv := http.Server{
 		Addr:         fmt.Sprintf("%s:%s", cfg.App.Host, cfg.App.Port),
