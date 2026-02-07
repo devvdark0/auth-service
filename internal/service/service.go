@@ -8,22 +8,24 @@ import (
 	"github.com/devvdark0/auth-service/internal/repository"
 )
 
-type UserService interface {
+type AuthService interface {
 	Register(ctx context.Context, email, password string) (int64, error)
 	Login(ctx context.Context, email, password string) (string, error)
 }
 
-type userService struct {
-	repo repository.UserRepository
+type authService struct {
+	repo      repository.UserRepository
+	validator *auth.JWTValidator
 }
 
-func NewUserService(repository repository.UserRepository) UserService {
-	return &userService{
-		repo: repository,
+func NewUserService(repository repository.UserRepository, validator *auth.JWTValidator) AuthService {
+	return &authService{
+		repo:      repository,
+		validator: validator,
 	}
 }
 
-func (us *userService) Register(ctx context.Context, email, password string) (int64, error) {
+func (us *authService) Register(ctx context.Context, email, password string) (int64, error) {
 	if _, err := us.repo.GetUserByEmail(ctx, email); err == nil {
 		return 0, fmt.Errorf("user is already exists with such email %w", err)
 	}
@@ -41,7 +43,7 @@ func (us *userService) Register(ctx context.Context, email, password string) (in
 	return userID, nil
 }
 
-func (us *userService) Login(ctx context.Context, email, password string) (string, error) {
+func (us *authService) Login(ctx context.Context, email, password string) (string, error) {
 	user, err := us.repo.GetUserByEmail(ctx, email)
 	if err != nil {
 		return "", fmt.Errorf("user not found %w", err)
@@ -51,6 +53,10 @@ func (us *userService) Login(ctx context.Context, email, password string) (strin
 		return "", fmt.Errorf("incorect password %w", err)
 	}
 
-	//TODO: return token
-	return "", nil
+	token, err := us.validator.GenerateToken()
+	if err != nil {
+		return "", fmt.Errorf("failed to create token %w", err)
+	}
+
+	return token, nil
 }
