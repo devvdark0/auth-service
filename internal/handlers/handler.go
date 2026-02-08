@@ -8,16 +8,20 @@ import (
 
 	"github.com/devvdark0/auth-service/internal/dto"
 	"github.com/devvdark0/auth-service/internal/service"
+	"github.com/go-playground/validator/v10"
 )
 
 type AuthHandler struct {
 	authService service.AuthService
+	validator   *validator.Validate
 	log         *slog.Logger
 }
 
 func NewAuthHandler(auth service.AuthService, log *slog.Logger) *AuthHandler {
+	validator := validator.New()
 	return &AuthHandler{
 		authService: auth,
+		validator:   validator,
 		log:         log,
 	}
 }
@@ -37,7 +41,10 @@ func (ah *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//TODO: validation
+	if err := ah.validator.Struct(req); err != nil {
+		http.Error(w, "Invalid Credentials", http.StatusBadRequest)
+		return
+	}
 
 	userId, err := ah.authService.Register(ctx, req.Email, req.Password)
 	if err != nil {
@@ -80,7 +87,10 @@ func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//TODO: validation
+	if err := ah.validator.Struct(req); err != nil {
+		http.Error(w, "Invalid Credentials", http.StatusBadRequest)
+		return
+	}
 
 	token, err := ah.authService.Login(ctx, req.Email, req.Password)
 	if err != nil {
