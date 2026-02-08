@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"log/slog"
+	"time"
 
 	"github.com/devvdark0/auth-service/internal/models"
 	"github.com/devvdark0/auth-service/internal/repository"
@@ -22,6 +23,9 @@ func NewPOSTGRESQLRepository(db *pgxpool.Pool, log *slog.Logger) repository.User
 }
 
 func (ur *userRepository) CreateUser(ctx context.Context, email, password string) (int64, error) {
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
 	sql := `INSERT INTO users(email, password) VALUES($1, $2) RETURNING id`
 
 	var userId int64
@@ -37,6 +41,9 @@ func (ur *userRepository) CreateUser(ctx context.Context, email, password string
 }
 
 func (ur *userRepository) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
 	sql := `SELECT id, email, password FROM users WHERE email=$1`
 
 	var user models.User
