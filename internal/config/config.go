@@ -9,8 +9,9 @@ import (
 )
 
 type Config struct {
-	App AppConfig `yaml:"app"`
-	DB  DBConfig  `yaml:"db"`
+	App  AppConfig  `yaml:"app"`
+	DB   DBConfig   `yaml:"db"`
+	Auth AuthConfig `yaml:"auth"`
 }
 
 type AppConfig struct {
@@ -26,6 +27,11 @@ type DBConfig struct {
 	URL string `env:"DATABASE_URL" env_required:"true"`
 }
 
+type AuthConfig struct {
+	Secret   string        `env:"JWT_SECRET"`
+	TokenTTL time.Duration `yaml:"tokenttl"`
+}
+
 func MustLoad(path string) (*Config, error) {
 	if err := godotenv.Load(); err != nil {
 		return nil, err
@@ -38,6 +44,7 @@ func MustLoad(path string) (*Config, error) {
 	}
 
 	cfg.DB.URL = os.Getenv("DATABASE_URL")
+	cfg.Auth.Secret = os.Getenv("JWT_SECRET")
 
 	return &cfg, nil
 }

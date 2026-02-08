@@ -53,7 +53,7 @@ func (us *authService) Login(ctx context.Context, email, password string) (strin
 		return "", fmt.Errorf("incorect password %w", err)
 	}
 
-	token, err := us.validator.GenerateToken()
+	token, err := us.validator.GenerateToken(user.ID, user.Email)
 	if err != nil {
 		return "", fmt.Errorf("failed to create token %w", err)
 	}
