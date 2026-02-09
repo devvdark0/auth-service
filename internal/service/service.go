@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 
 	"github.com/devvdark0/auth-service/internal/auth"
@@ -23,7 +24,7 @@ type authService struct {
 	validator *auth.JWTValidator
 }
 
-func NewUserService(repository repository.UserRepository, validator *auth.JWTValidator) AuthService {
+func NewAuthService(repository repository.UserRepository, validator *auth.JWTValidator) AuthService {
 	return &authService{
 		repo:      repository,
 		validator: validator,
@@ -31,8 +32,13 @@ func NewUserService(repository repository.UserRepository, validator *auth.JWTVal
 }
 
 func (us *authService) Register(ctx context.Context, email, password string) (int64, error) {
-	if _, err := us.repo.GetUserByEmail(ctx, email); err == nil {
+	_, err := us.repo.GetUserByEmail(ctx, email)
+	if err == nil {
 		return 0, ErrEmailInUse
+	}
+
+	if !errors.Is(err, sql.ErrNoRows) {
+		return 0, err
 	}
 
 	hashPass, err := auth.HashPassword(password)

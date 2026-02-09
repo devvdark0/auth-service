@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -28,7 +29,7 @@ func (j *JWTValidator) GenerateToken(id int64, email string) (string, error) {
 	exp := time.Now().Add(j.tokenTTL).Unix()
 
 	claims := jwt.MapClaims{
-		"sub":   id,
+		"sub":   strconv.Itoa(int(id)),
 		"email": email,
 		"exp":   exp,
 		"iat":   time.Now().Unix(),
@@ -36,28 +37,31 @@ func (j *JWTValidator) GenerateToken(id int64, email string) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	return token.SignedString(j.secret)
+	tokenStr, err := token.SignedString([]byte(j.secret))
+	if err != nil {
+		return "", err
+	}
 
+	return tokenStr, nil
 }
 
-func (j *JWTValidator) ValidateToken(tokenStr string) (*jwt.MapClaims, error) {
+func (j *JWTValidator) ValidateToken(tokenStr string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, ErrInvalidToken
 		}
 
-		return j.secret, nil
+		return []byte(j.secret), nil
 	})
-
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenExpired) {
 			return nil, ErrTokenExpired
 		}
-
 		return nil, ErrInvalidToken
 	}
 
-	if claims, ok := token.Claims.(*jwt.MapClaims); ok && token.Valid {
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if ok && token.Valid {
 		return claims, nil
 	}
 

@@ -18,12 +18,12 @@ func AuthMiddleware(validator *auth.JWTValidator) func(http.Handler) http.Handle
 			}
 
 			parts := strings.Split(authHeader, " ")
-			if len(parts) != 2 && parts[0] != "Bearer" {
+			if len(parts) != 2 || parts[0] != "Bearer" {
 				http.Error(w, "Invalid authorization format", http.StatusUnauthorized)
+				return
 			}
 
 			token := parts[1]
-
 			claims, err := validator.ValidateToken(token)
 			if err != nil {
 				http.Error(w, "Invalid or expired token", http.StatusUnauthorized)

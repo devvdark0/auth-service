@@ -10,9 +10,15 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/devvdark0/auth-service/internal/auth"
 	"github.com/devvdark0/auth-service/internal/config"
 	"github.com/devvdark0/auth-service/internal/db"
+	"github.com/devvdark0/auth-service/internal/handlers"
+	"github.com/devvdark0/auth-service/internal/middleware"
 	"github.com/devvdark0/auth-service/internal/migrations"
+	"github.com/devvdark0/auth-service/internal/repository/postgres"
+	"github.com/devvdark0/auth-service/internal/service"
+	"github.com/gorilla/mux"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -34,15 +40,31 @@ func main() {
 		log.Error("failed to initialize database", "err", err)
 		os.Exit(1)
 	}
+	defer db.Close()
 
 	if err := migrations.RunMigrations(cfg.DB.URL, "./migrations"); err != nil {
 		log.Error("migrations are failed", "err", err)
 	}
 	log.Info("migrations are succesfully applied")
-	_ = db
+
+	storage := postgres.NewPOSTGRESQLRepository(db, log)
+	validator := auth.NewJWTValidator(cfg.Auth.Secret, cfg.Auth.TokenTTL)
+	authService := service.NewAuthService(storage, validator)
+	handler := handlers.NewAuthHandler(authService, log)
+
+	r := mux.NewRouter()
+	r.HandleFunc("/api/auth/register", handler.Register)
+	r.HandleFunc("/api/auth/login", handler.Login)
+
+	protected := r.PathPrefix("/api").Subrouter()
+	protected.Use(middleware.AuthMiddleware(validator))
+	protected.HandleFunc("/home", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Hello, home"))
+	})
 
 	srv := http.Server{
 		Addr:         fmt.Sprintf("%s:%s", cfg.App.Host, cfg.App.Port),
+		Handler:      r,
 		ReadTimeout:  cfg.App.Timeout,
 		WriteTimeout: cfg.App.Timeout,
 		IdleTimeout:  cfg.App.IdleTimeout,
