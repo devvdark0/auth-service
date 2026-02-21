@@ -11,6 +11,7 @@ type Config struct {
 }
 
 type AppConfig struct {
+	Env         string        `yaml:"env"`
 	Host        string        `yaml:"host"`
 	Port        string        `yaml:"port"`
 	Timeout     time.Duration `yaml:"timeout"`
