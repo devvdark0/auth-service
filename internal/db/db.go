@@ -1,4 +1,4 @@
-package pg
+package db
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func InitDB(ctx context.Context, cfg *config.DatabaseConfig) (*pgxpool.Pool, error) {
+func InitPOSTGRESQL(ctx context.Context, cfg *config.DatabaseConfig) (*pgxpool.Pool, error) {
 	pool, err := pgxpool.New(ctx, cfg.DSN())
 	if err != nil {
 		return nil, err

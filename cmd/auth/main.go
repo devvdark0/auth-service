@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"github.com/devvdark0/auth-service/internal/config"
-	"github.com/devvdark0/auth-service/internal/db/pg"
+	"github.com/devvdark0/auth-service/internal/db"
 	"github.com/devvdark0/auth-service/internal/logger"
 )
 
@@ -24,7 +24,7 @@ func main() {
 
 	log := logger.NewLogger(cfg.App.Env)
 
-	db, err := pg.InitDB(ctx, &cfg.DB)
+	db, err := db.InitPOSTGRESQL(ctx, &cfg.DB)
 	if err != nil {
 		log.Error("failed to initialize database", "err", err)
 		os.Exit(1)
