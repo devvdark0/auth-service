@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
@@ -13,13 +15,15 @@ import (
 
 type AuthService struct {
 	validator *validator.Validate
+	manager   *auth.JWTManager
 	store     repository.UserRepository
 }
 
-func NewAuthService(storage repository.UserRepository) *AuthService {
+func NewAuthService(storage repository.UserRepository, manager *auth.JWTManager) *AuthService {
 	validator := validator.New()
 	return &AuthService{
 		validator: validator,
+		manager:   manager,
 		store:     storage,
 	}
 }
@@ -47,4 +51,26 @@ func (a *AuthService) Register(ctx context.Context, req *models.RegisterRequest)
 	}
 
 	return userId, nil
+}
+
+func (a *AuthService) Login(ctx context.Context, req *models.LoginRequest) (string, error) {
+	if err := a.validator.Struct(req); err != nil {
+		return "", fmt.Errorf("invalid data: %w", err)
+	}
+
+	user, err := a.store.GetByEmail(ctx, req.Email)
+	if err == nil {
+		return "", fmt.Errorf("email is already in use")
+	}
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", fmt.Errorf("user does not exist")
+	}
+
+	token, err := a.manager.GenerateToken(user.ID, user.Email)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate token: %w", err)
+	}
+
+	return token, nil
 }

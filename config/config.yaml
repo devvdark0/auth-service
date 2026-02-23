@@ -11,3 +11,6 @@ db:
   sslmode: disable
   max_conns: 25
   min_conns: 5
+
+auth:
+  tokenttl: 15m

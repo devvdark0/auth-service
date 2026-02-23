@@ -10,8 +10,9 @@ import (
 )
 
 type Config struct {
-	App AppConfig      `yaml:"app"`
-	DB  DatabaseConfig `yaml:"db"`
+	App  AppConfig      `yaml:"app"`
+	DB   DatabaseConfig `yaml:"db"`
+	Auth JWTConfig      `yaml:"auth"`
 }
 
 type AppConfig struct {
@@ -33,6 +34,11 @@ type DatabaseConfig struct {
 	MinConns int    `yaml:"min_conns"`
 }
 
+type JWTConfig struct {
+	Secret   []byte        `env:"JWT_SECRET"`
+	TokenTTL time.Duration `yaml:"tokenttl"`
+}
+
 func MustLoad(configPath string) (*Config, error) {
 	if err := godotenv.Load(); err != nil {
 		return nil, err
@@ -44,9 +50,12 @@ func MustLoad(configPath string) (*Config, error) {
 		return nil, err
 	}
 
+	//Sensible database data inside env file
 	cfg.DB.Name = os.Getenv("DB_NAME")
 	cfg.DB.User = os.Getenv("DB_USERNAME")
 	cfg.DB.Password = os.Getenv("DB_PASSWORD")
+
+	cfg.Auth.Secret = []byte(os.Getenv("JWT_SECRET"))
 
 	return &cfg, nil
 }
