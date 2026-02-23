@@ -1,4 +1,4 @@
-package handler
+package auth
 
 import (
 	"encoding/json"
@@ -37,9 +37,43 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	resp := models.RegisterResponse{
+		UserID: userId,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(userId); err != nil {
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
+	a.log.Info("request completed successfully!")
+}
+
+func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	a.log.Info("start processing login request...")
+
+	ctx := r.Context()
+
+	var req models.LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	token, err := a.authServ.Login(ctx, &req)
+	if err != nil {
+		http.Error(w, "failed to log in", http.StatusInternalServerError)
+		return
+	}
+
+	resp := models.LoginResponse{
+		Token: token,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	a.log.Info("request completed successfully!")
 }
