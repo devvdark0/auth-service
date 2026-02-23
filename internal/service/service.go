@@ -2,8 +2,6 @@ package service
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 	"time"
 
@@ -33,6 +31,11 @@ func (a *AuthService) Register(ctx context.Context, req *models.RegisterRequest)
 		return 0, fmt.Errorf("invalid data: %w", err)
 	}
 
+	_, err := a.store.GetByEmail(ctx, req.Email)
+	if err == nil {
+		return 0, fmt.Errorf("email is already in use")
+	}
+
 	passHash, err := auth.HashPassword(req.Password)
 	if err != nil {
 		return 0, fmt.Errorf("failed to hash password: %w", err)
@@ -59,12 +62,8 @@ func (a *AuthService) Login(ctx context.Context, req *models.LoginRequest) (stri
 	}
 
 	user, err := a.store.GetByEmail(ctx, req.Email)
-	if err == nil {
-		return "", fmt.Errorf("email is already in use")
-	}
-
-	if errors.Is(err, sql.ErrNoRows) {
-		return "", fmt.Errorf("user does not exist")
+	if err != nil {
+		return "", fmt.Errorf("user does not exists")
 	}
 
 	token, err := a.manager.GenerateToken(user.ID, user.Email)
