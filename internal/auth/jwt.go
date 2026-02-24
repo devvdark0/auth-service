@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -38,4 +39,23 @@ func (j *JWTManager) GenerateToken(id int64, email string) (string, error) {
 	}
 
 	return token, nil
+}
+
+func (j *JWTManager) VerifyToken(tokenStr string) (*jwt.MapClaims, error) {
+	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("failed to parse token")
+		}
+
+		return j.secret, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(*jwt.MapClaims); ok {
+		return claims, nil
+	}
+
+	return nil, fmt.Errorf("invalid token")
 }
