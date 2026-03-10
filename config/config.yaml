@@ -10,4 +10,7 @@ db:
   host: localhost
   port: 5432
   user: devvdark0-auth-user-db!
+  max_idle_conn: 10
+  max_open_conn: 10
+  max_conn_time_sec: 180s
   sslmode: disable
