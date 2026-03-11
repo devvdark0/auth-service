@@ -11,8 +11,9 @@ import (
 )
 
 type Config struct {
-	App AppConfig `yaml:"app"`
-	Db  DbConfig  `yaml:"db"`
+	App  AppConfig  `yaml:"app"`
+	Db   DbConfig   `yaml:"db"`
+	Auth AuthConfig `yaml:"auth"`
 }
 
 type AppConfig struct {
@@ -35,6 +36,11 @@ type DbConfig struct {
 	SSLMode         string        `yaml:"sslmode"`
 }
 
+type AuthConfig struct {
+	Secret   []byte        `env:"JWT_SECRET"`
+	TokenTTL time.Duration `yaml:"token-ttl"`
+}
+
 func MustLoad(cfgPath string) (*Config, error) {
 	if err := godotenv.Load(); err != nil {
 		return nil, err
@@ -47,6 +53,7 @@ func MustLoad(cfgPath string) (*Config, error) {
 	}
 
 	cfg.Db.Password = os.Getenv("DB_PASSWORD")
+	cfg.Auth.Secret = []byte(os.Getenv("JWT_SECRET"))
 
 	return &cfg, nil
 }

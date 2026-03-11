@@ -14,3 +14,6 @@ db:
   max_open_conn: 10
   max_conn_time_sec: 180s
   sslmode: disable
+
+auth:
+  token-ttl: 15m
