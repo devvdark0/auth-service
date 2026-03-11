@@ -1,11 +1,13 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 type Config struct {
@@ -22,12 +24,15 @@ type AppConfig struct {
 }
 
 type DbConfig struct {
-	Name     string `yaml:"name"`
-	Host     string `yaml:"host"`
-	Port     string `yaml:"port"`
-	Username string `yaml:"user"`
-	Password string `env:"DB_PASSWORD"`
-	SSLMode  string `yaml:"sslmode"`
+	Name            string        `yaml:"name"`
+	Host            string        `yaml:"host"`
+	Port            string        `yaml:"port"`
+	Username        string        `yaml:"user"`
+	Password        string        `env:"DB_PASSWORD"`
+	MaxIdleConn     int           `yaml:"max_idle_conn"`
+	MaxOpenConn     int           `yaml:"max_open_conn"`
+	MaxLifetimeConn time.Duration `yaml:"max_conn_time_sec"`
+	SSLMode         string        `yaml:"sslmode"`
 }
 
 func MustLoad(cfgPath string) (*Config, error) {
@@ -44,4 +49,16 @@ func MustLoad(cfgPath string) (*Config, error) {
 	cfg.Db.Password = os.Getenv("DB_PASSWORD")
 
 	return &cfg, nil
+}
+
+func (d *DbConfig) DSN() string {
+	return fmt.Sprintf(
+		"host=%s port=%s dbname=%s user=%s password=%s sslmode=%s",
+		d.Host,
+		d.Port,
+		d.Name,
+		d.Username,
+		d.Password,
+		d.SSLMode,
+	)
 }

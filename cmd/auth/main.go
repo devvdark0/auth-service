@@ -17,6 +17,12 @@ func main() {
 		log.Fatal(err)
 	}
 
+	db, err := config.InitDb(&cfg.Db)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_ = db
+
 	srv := http.Server{
 		Addr:         fmt.Sprintf("%s:%s", cfg.App.Host, cfg.App.Port),
 		Handler:      nil,
