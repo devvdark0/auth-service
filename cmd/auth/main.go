@@ -1,13 +1,15 @@
 package main
 
 import (
+	"context"
 	"flag"
-	"fmt"
 	"log"
-	"log/slog"
-	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
+	"github.com/devvdark0/auth-service/internal/api"
 	"github.com/devvdark0/auth-service/internal/config"
 )
 
@@ -24,42 +26,32 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log := configureLogger(cfg.App.Env)
+	api := api.New(cfg)
 
-	log.Debug("initializing db....")
-	db, err := config.InitDb(&cfg.Db)
-	if err != nil {
-		log.Error("failed to init databaase", "err", err)
-	}
-	_ = db
+	done := make(chan struct{})
 
-	srv := http.Server{
-		Addr:         fmt.Sprintf("%s:%s", cfg.App.Host, cfg.App.Port),
-		Handler:      nil,
-		ReadTimeout:  cfg.App.Timeout,
-		WriteTimeout: cfg.App.Timeout,
-		IdleTimeout:  cfg.App.IdleTimeout,
-	}
+	log.Print("starting server...", "port=", cfg.App.Port)
+	go func() {
+		defer close(done)
 
-	log.Info("starting server...", "port", cfg.App.Port)
-	if err := srv.ListenAndServe(); err != nil {
-		panic(err)
-	}
-}
+		if err := api.Run(); err != nil {
+			log.Panic(err)
+		}
+	}()
 
-func configureLogger(env string) *slog.Logger {
-	var log *slog.Logger
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT)
 
-	switch env {
-	case envDev:
-		log = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-			Level: slog.LevelDebug,
-		}))
-	case envProd:
-		log = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-			Level: slog.LevelInfo,
-		}))
-	}
+	<-sigCh
 
-	return log
+	log.Print("received signal, initiating graceful shutdown...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	<-done
+
+	api.Stop(ctx)
+
+	log.Println("server stopped gracefully")
 }
