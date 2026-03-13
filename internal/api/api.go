@@ -39,7 +39,7 @@ func New(cfg *config.Config) *API {
 	authService := service.NewAuthService(authStorage, jwtManager)
 	authHandler := handler.NewAuthHandler(log, authService)
 
-	r := mountRoutes(*authHandler, jwtManager)
+	r := mountRoutes(log, *authHandler, jwtManager)
 
 	srv := http.Server{
 		Addr:         fmt.Sprintf("%s:%s", cfg.App.Host, cfg.App.Port),
@@ -65,9 +65,9 @@ func (a *API) Stop(ctx context.Context) {
 	a.srv.Shutdown(ctx)
 }
 
-func mountRoutes(handler handler.AuthHandler, jwt *auth.JWTManager) *mux.Router {
+func mountRoutes(log *slog.Logger, handler handler.AuthHandler, jwt *auth.JWTManager) *mux.Router {
 	r := mux.NewRouter()
-	r.Use()
+	r.Use(LoggingMiddleware(log))
 
 	authRoutes := r.PathPrefix("/api/v1/auth").Subrouter()
 	authRoutes.HandleFunc("/register", handler.Register).Methods(http.MethodPost)

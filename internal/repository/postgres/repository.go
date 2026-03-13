@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/devvdark0/auth-service/internal/models"
+	_ "github.com/lib/pq"
 )
 
 type authRepository struct {
@@ -23,7 +24,7 @@ func NewAuthRepository(db *sql.DB, log *slog.Logger) *authRepository {
 func (a *authRepository) Create(ctx context.Context, u *models.User) (int64, error) {
 	a.log.Debug("creating user", "email", u.Email)
 
-	sql := `INSERT INTO users(username, email, password, created_at) VALUES(?, ?, ?, ?)`
+	sql := `INSERT INTO users(username, email, password, created_at) VALUES($1, $2, $3, $4)`
 
 	res, err := a.db.ExecContext(ctx, sql, u.Username, u.Email, u.PassHash, u.CreatedAt)
 	if err != nil {
@@ -43,7 +44,7 @@ func (a *authRepository) Create(ctx context.Context, u *models.User) (int64, err
 func (a *authRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	a.log.Debug("get user from db", "email", email)
 
-	sql := `SELECT * FROM users WHERE email=?`
+	sql := `SELECT id, username, email, password, created_at FROM users WHERE email=$1`
 
 	var user models.User
 

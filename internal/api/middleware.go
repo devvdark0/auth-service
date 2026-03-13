@@ -42,9 +42,9 @@ func AuthMiddleware(jwt *auth.JWTManager) func(http.Handler) http.Handler {
 				return
 			}
 
-			userId, err := claims.GetSubject()
-			if err != nil {
-				http.Error(w, "Invalid user id in token", http.StatusUnauthorized)
+			userId, ok := claims["sub"].(string)
+			if !ok {
+				http.Error(w, "Invalid token claims", http.StatusUnauthorized)
 				return
 			}
 

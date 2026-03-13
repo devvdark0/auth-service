@@ -24,7 +24,7 @@ func (j *JWTManager) GenerateToken(id int64, email string) (string, error) {
 	exp := time.Now().Add(j.tokenTTL)
 
 	claims := jwt.MapClaims{
-		"sub":   id,
+		"sub":   string(id),
 		"email": email,
 		"iat":   time.Now().Unix(),
 		"exp":   exp.Unix(),
@@ -40,7 +40,7 @@ func (j *JWTManager) GenerateToken(id int64, email string) (string, error) {
 	return tokenStr, nil
 }
 
-func (j *JWTManager) ValidateToken(tokenStr string) (*jwt.MapClaims, error) {
+func (j *JWTManager) ValidateToken(tokenStr string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return "", fmt.Errorf("invalid token")
@@ -52,7 +52,7 @@ func (j *JWTManager) ValidateToken(tokenStr string) (*jwt.MapClaims, error) {
 		return nil, err
 	}
 
-	if claims, ok := token.Claims.(*jwt.MapClaims); ok {
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		return claims, nil
 	}
 

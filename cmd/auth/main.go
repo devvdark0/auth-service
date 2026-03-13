@@ -13,11 +13,6 @@ import (
 	"github.com/devvdark0/auth-service/internal/config"
 )
 
-const (
-	envDev  = "dev"
-	envProd = "prod"
-)
-
 func main() {
 	var cfgPath = flag.String("config_path", "./config/config.yaml", "set path to config file")
 
@@ -28,11 +23,8 @@ func main() {
 
 	api := api.New(cfg)
 
-	done := make(chan struct{})
-
 	log.Print("starting server...", "port=", cfg.App.Port)
 	go func() {
-		defer close(done)
 
 		if err := api.Run(); err != nil {
 			log.Panic(err)
@@ -48,8 +40,6 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-
-	<-done
 
 	api.Stop(ctx)
 
